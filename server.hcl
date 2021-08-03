@@ -1,9 +1,10 @@
 //
 // Create CA certificate.
 //
+// hello
 exec_remote "create_ca" {
   image {
-    name = "consul:1.9.5"
+    name = "consul:1.10.1"
   }
   
   working_directory = "/certs"
@@ -28,7 +29,7 @@ exec_remote "create_certs" {
   depends_on = ["exec_remote.create_ca"]
 
   image {
-    name = "consul:1.9.5"
+    name = "consul:1.10.1"
   }
   
   working_directory = "/certs"
@@ -54,7 +55,7 @@ exec_remote "create_certs" {
 //
 // Consul server node.
 //
-container "consul" {
+container "server" {
   depends_on = ["exec_remote.create_certs"]
 
   network {
@@ -62,16 +63,24 @@ container "consul" {
   }
 
   image {
-      name = "ubuntu-systemd"
+      //name = "nicholasjackson/ubuntu-systemd:latest"
+      name = "nicholasjackson/ubuntu-systemd:consul"
   }
 
   privileged = true
 
-  volume {
-    source      = "/sys/fs/cgroup"
-    destination = "/sys/fs/cgroup"
+  port {
+    local = 8501
+    remote = 8501
+    host = 8501
   }
-
+  
+  volume {
+    type = "tmpfs"
+    source      = ""
+    destination = "/sys/fs/cgroup"
+ }
+ 
   volume {
     source      = ""
     destination = "/tmp"
@@ -90,20 +99,14 @@ container "consul" {
     type = "tmpfs"
   }
 
-  // Temporarily add this here until volume on exec_remote works.
-  volume {
-    source = "./files/bootstrap.sh"
-    destination = "/files/bootstrap.sh"
-  }
-
   volume {
     source      = "${data("shared")}/certs"
     destination = "/certs"
   }
 
   volume {
-    source      = "./files/server.hcl"
-    destination = "/etc/consul.d/server.hcl"
+    source      = "./files/server"
+    destination = "/files"
   }
 
   env {
@@ -136,7 +139,7 @@ container "consul" {
 // Install Consul.
 //
 exec_remote "install_consul" {
-  target = "container.consul"
+  target = "container.server"
 
   cmd = "bash"
   args = [
