@@ -1,8 +1,28 @@
 FROM nicholasjackson/ubuntu-systemd:latest
 
+ARG TARGETPLATFORM
+ARG TARGETOS
+ARG TARGETARCH
+ARG TARGETVARIANT
+ARG BUILDPLATFORM
+ARG BUILDARCH
+
+# Add Consul
 RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add - && \
   sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main" && \
   sudo apt-get update && \
   sudo apt-get install consul -y
 
+# Install Envoy
+RUN curl -L https://github.com/nicholasjackson/envoy-binaries/releases/download/v1.18.3/envoy_${TARGETARCH} -o /usr/bin/envoy && \
+    chmod +x /usr/bin/envoy
+
+# Add fake service binary
+RUN curl -L https://github.com/nicholasjackson/fake-service/releases/download/v0.22.7/fake_service_linux_${TARGETARCH}.zip -o /tmp/fake.zip && \
+ cd /tmp && \
+ unzip fake.zip && \
+ mv ./fake-service /usr/bin/fake-service && \
+ chmod +x /usr/bin/fake-service
+
+# Start SystemD
 CMD ["/sbin/init", "--log-target=journal"]

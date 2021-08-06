@@ -8,7 +8,8 @@ RUN sed -i 's/# deb/deb/g' /etc/apt/sources.list
 
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
-    software-properties-common curl net-tools dbus systemd systemd-cron rsyslog iproute2 python python-apt sudo bash ca-certificates && \
+    software-properties-common dbus systemd systemd-cron rsyslog iproute2 python python-apt sudo bash ca-certificates \
+    curl net-tools jq unzip vim dnsutils iputils-ping && \
     apt-get clean && \
     rm -rf /usr/share/doc/* /usr/share/man/* /var/lib/apt/lists/* /tmp/* /var/tmp/*
 

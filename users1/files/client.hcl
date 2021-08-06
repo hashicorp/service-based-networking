@@ -1,4 +1,4 @@
-node_name = "users"
+node_name = "users1"
 data_dir = "/tmp"
 server = false
 
@@ -6,9 +6,13 @@ datacenter = "dc1"
 
 log_level = "DEBUG"
 
+verify_incoming = false
 verify_outgoing = true
+verify_server_hostname = true
 
 ca_file = "/certs/consul-agent-ca.pem"
+
+retry_join = ["server.container.shipyard.run"]
 
 connect {
   enabled = true
@@ -28,14 +32,4 @@ ports {
 
 auto_encrypt {
   tls = true
-}
-
-acl = {
-  enabled = true
-  default_policy = "deny"
-  enable_token_persistence = true
-
-  tokens {
-    master = "00000000-0000-0000-0000-000000000000"
-  }
 }

@@ -1,4 +1,4 @@
-node_name = "consul"
+node_name = "server"
 data_dir = "/tmp"
 
 datacenter = "dc1"

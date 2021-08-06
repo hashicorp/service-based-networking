@@ -1,9 +1,7 @@
 //
 // Consul client node.
 //
-container "users" {
-  depends_on = ["exec_remote.create_certs"]
-
+container "users1" {
   network {
       name = "network.dc1"
   }
@@ -42,9 +40,14 @@ container "users" {
     source      = "${data("shared")}/certs"
     destination = "/certs"
   }
+  
+  volume {
+    source      = "${data("shared")}/tokens"
+    destination = "/tokens"
+  }
 
   volume {
-    source      = "./files/users"
+    source      = "./files"
     destination = "/files"
   }
 
@@ -54,31 +57,28 @@ container "users" {
   }
 
   env {
-    key = "CONSUL_HTTP_TOKEN"
-    value = "00000000-0000-0000-0000-000000000000"
-  }
-
-  env {
     key = "CONSUL_CACERT"
     value = "/certs/consul-agent-ca.pem"
   }
+}
 
-  env {
-    key = "CONSUL_CLIENT_CERT"
-    value = "/certs/dc1-server-consul-0.pem"
-  }
-   
-  env {
-    key = "CONSUL_CLIENT_KEY"
-    value = "/certs/dc1-server-consul-0-key.pem"
-  }
+exec_remote "generate_token_for_users" {
+  target = "container.server"
+  depends_on = ["exec_remote.configure_acl_policy"]
+
+  cmd = "/bin/bash"
+  args = [
+    "-c",
+    "consul acl token create -policy-name=users --format=json | jq -r .SecretID > /tokens/users.token"
+  ]
 }
 
 //
 // Install Consul.
 //
 exec_remote "install_consul_users" {
-  target = "container.users"
+  target = "container.users1"
+  depends_on = ["exec_remote.generate_token_for_users"]
 
   cmd = "bash"
   args = [
