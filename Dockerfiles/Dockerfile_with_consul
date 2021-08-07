@@ -14,7 +14,10 @@ RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add - && \
   sudo apt-get install consul -y
 
 # Install Envoy
-RUN curl -L https://github.com/nicholasjackson/envoy-binaries/releases/download/v1.18.3/envoy_${TARGETARCH} -o /usr/bin/envoy && \
+RUN curl -L https://github.com/nicholasjackson/envoy-binaries/releases/download/v1.18.3/envoy_1.18.3_linux_${TARGETARCH}.zip -o /tmp/envoy.zip && \
+    cd /tmp && \
+    unzip envoy.zip && \
+    mv envoy /usr/bin/envoy && \
     chmod +x /usr/bin/envoy
 
 # Add fake service binary
