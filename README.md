@@ -69,13 +69,13 @@ running a different version of Consul you must first destroy the previous versio
 #### Consul 1.9.5 - default
 
 ```
-LOG_LEVEL=debug shipyard run --var="consul_version=1.9.5" ./all
+LOG_LEVEL=debug shipyard run --var="consul_version=1.9.5" ./consul-vms/all
 ```
 
 #### Consul 1.10.1
 
 ```
-LOG_LEVEL=debug shipyard run --var="consul_version=1.10.1" ./all
+LOG_LEVEL=debug shipyard run --var="consul_version=1.10.1" ./consul-vms/all
 ```
 
 ## Removing resources
