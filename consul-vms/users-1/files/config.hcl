@@ -1,5 +1,5 @@
-node_name = "users1"
-data_dir = "/tmp"
+node_name = "users-1"
+data_dir = "/opt/consul"
 server = false
 
 datacenter = "dc1"
@@ -18,14 +18,8 @@ connect {
   enabled = true
 }
 
-addresses {
-  https = "0.0.0.0"
-  http = "0.0.0.0"
-  grpc = "0.0.0.0"
-}
-
 ports {
-  http = -1,
+  http = -1
   https = 8501
   grpc = 8502
 }

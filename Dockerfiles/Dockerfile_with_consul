@@ -8,10 +8,11 @@ ARG BUILDPLATFORM
 ARG BUILDARCH
 
 # Add Consul
-RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add - && \
-  sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main" && \
-  sudo apt-get update && \
-  sudo apt-get install consul -y
+RUN curl -L https://releases.hashicorp.com/consul/1.10.1/consul_1.10.1_linux_${TARGETARCH}.zip -o /tmp/consul.zip && \
+    cd /tmp && \
+    unzip consul.zip && \
+    mv consul /usr/bin/consul && \
+    chmod +x /usr/bin/consul
 
 # Install Envoy
 RUN curl -L https://github.com/nicholasjackson/envoy-binaries/releases/download/v1.18.3/envoy_1.18.3_linux_${TARGETARCH}.zip -o /tmp/envoy.zip && \

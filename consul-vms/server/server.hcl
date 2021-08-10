@@ -1,7 +1,28 @@
 //
+// Create Gossip encryption key.
+//
+exec_remote "create_gossip_key" {
+  image {
+    name = "consul:1.10.1"
+  }
+  
+  working_directory = "/tokens"
+
+  cmd = "sh"
+  args = [
+    "-c",
+    "consul keygen > /tokens/gossip.key"
+  ]
+  
+  volume {
+    source = "${data("shared")}/tokens"
+    destination = "/tokens"
+  }
+}
+
+//
 // Create CA certificate.
 //
-// hello
 exec_remote "create_ca" {
   image {
     name = "consul:1.10.1"
@@ -23,10 +44,10 @@ exec_remote "create_ca" {
 }
 
 //
-// Create certificates.
+// Create certificates for server
 //
 exec_remote "create_certs" {
-  depends_on = ["exec_remote.create_ca"]
+  depends_on = ["exec_remote.create_ca","exec_remote.create_gossip_key"]
 
   image {
     name = "consul:1.10.1"
@@ -43,7 +64,8 @@ exec_remote "create_certs" {
     "-dc", "dc1",
     "-node", "consul",
     "-ca", "/certs/consul-agent-ca.pem",
-    "-key", "/certs/consul-agent-ca-key.pem"
+    "-key", "/certs/consul-agent-ca-key.pem",
+    "-additional-dnsname","server.container.shipyard.run",
   ]
   
   volume {
@@ -59,12 +81,12 @@ container "server" {
   depends_on = ["exec_remote.create_certs"]
 
   network {
-      name = "network.dc1"
+    name = "network.dc1"
   }
 
   image {
       //name = "nicholasjackson/ubuntu-systemd:latest"
-      name = "nicholasjackson/ubuntu-systemd:consul"
+    name = "nicholasjackson/ubuntu-systemd:consul-${var.consul_version}"
   }
 
   privileged = true

@@ -18,7 +18,7 @@ build_docker_with_consul:
 	docker buildx use multi
 	docker buildx inspect --bootstrap
 	docker buildx build --platform linux/arm64,linux/amd64 \
-		-t nicholasjackson/ubuntu-systemd:consul \
+		-t nicholasjackson/ubuntu-systemd:consul-1.10.1 \
     -f ./Dockerfile_with_consul \
     . \
 		--push

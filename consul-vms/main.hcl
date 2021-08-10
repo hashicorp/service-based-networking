@@ -2,10 +2,6 @@ network "dc1" {
     subnet = "10.0.0.0/16"
 }
 
-variable "use_modules" {
-    default = true
-}
-
 output "CONSUL_HTTP_ADDR" {
   value = "https://localhost:8501"
 }

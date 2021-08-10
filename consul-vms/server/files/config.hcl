@@ -1,5 +1,5 @@
 node_name = "server"
-data_dir = "/tmp"
+data_dir = "/opt/consul"
 
 datacenter = "dc1"
 
@@ -7,9 +7,10 @@ server = true
 bootstrap_expect = 1
 log_level = "DEBUG"
 
-ui_config {
-  enabled = true
-}
+ui = true
+#ui_config {
+#  enabled = true
+#}
 
 auto_encrypt {
   allow_tls = true
@@ -39,9 +40,10 @@ ports {
   grpc = 8502
 }
 
-acl = {
+acl {
   enabled = true
   default_policy = "deny"
+  down_policy    = "extend-cache"
   enable_token_persistence = true
 
   tokens {

@@ -1,40 +1,16 @@
 //
 // Consul client node.
 //
-container "users1" {
+container "users-1" {
   network {
-      name = "network.dc1"
+    name = "network.dc1"
   }
 
   image {
-      name = "nicholasjackson/ubuntu-systemd:consul"
+    name = "nicholasjackson/ubuntu-systemd:consul-${var.consul_version}"
   }
 
   privileged = true
-  
-  volume {
-    type = "tmpfs"
-    source      = ""
-    destination = "/sys/fs/cgroup"
- }
- 
-  volume {
-    source      = ""
-    destination = "/tmp"
-    type = "tmpfs"
-  }
-
-  volume {
-    source      = ""
-    destination = "/run"
-    type = "tmpfs"
-  }
-
-  volume {
-    source      = ""
-    destination = "/run/lock"
-    type = "tmpfs"
-  }
 
   volume {
     source      = "${data("shared")}/certs"
@@ -55,10 +31,45 @@ container "users1" {
     key = "CONSUL_HTTP_ADDR"
     value = "https://localhost:8501"
   }
+  
+  env {
+    key = "CONSUL_GRPC_ADDR"
+    value = "https://localhost:8502"
+  }
+
+  env {
+    key = "CONSUL_HTTP_TOKEN_FILE"
+    value = "/tokens/users.token"
+  }
 
   env {
     key = "CONSUL_CACERT"
-    value = "/certs/consul-agent-ca.pem"
+    value = "/certs/local-agent-ca.pem"
+  }
+
+  # Tmp volumes required by SystemD
+  volume {
+    type = "tmpfs"
+    source      = ""
+    destination = "/sys/fs/cgroup"
+  }
+ 
+  volume {
+    source      = ""
+    destination = "/tmp"
+    type = "tmpfs"
+  }
+
+  volume {
+    source      = ""
+    destination = "/run"
+    type = "tmpfs"
+  }
+
+  volume {
+    source      = ""
+    destination = "/run/lock"
+    type = "tmpfs"
   }
 }
 
@@ -77,7 +88,7 @@ exec_remote "generate_token_for_users" {
 // Install Consul.
 //
 exec_remote "install_consul_users" {
-  target = "container.users1"
+  target = "container.users-1"
   depends_on = ["exec_remote.generate_token_for_users"]
 
   cmd = "bash"
