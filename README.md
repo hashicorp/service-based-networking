@@ -40,8 +40,8 @@ starting the blueprint.
 ┃ LOG_LEVEL=debug shipyard run --var="consul_version=1.10.1" ./all
 
 Currently the following Consul versions are supported:
-• 1.9.5 - default
-• 1.10.1
+• 1.9.5 
+• 1.10.1 - default
 
 0.3 Cleanup
 
@@ -66,13 +66,13 @@ shipyard output
 Different Consul versions can be run by setting the `consul_version` Shipyard variable. NOTE: before
 running a different version of Consul you must first destroy the previous version using the `shipyard destroy` command.
 
-#### Consul 1.9.5 - default
+#### Consul 1.9.5
 
 ```
 LOG_LEVEL=debug shipyard run --var="consul_version=1.9.5" ./consul-vms/all
 ```
 
-#### Consul 1.10.1
+#### Consul 1.10.1 - default
 
 ```
 LOG_LEVEL=debug shipyard run --var="consul_version=1.10.1" ./consul-vms/all
@@ -110,7 +110,7 @@ shipyard logs
 
 ## Accessing the server or client
 
-Either use the standar Docker command `docker exec -it container_id bash` or you can use the following Shipyard convenience methods
+Either use the standard Docker command `docker exec -it container_id bash` or you can use the following Shipyard convenience methods
 
 ## Consul Client - Users Service
 ```

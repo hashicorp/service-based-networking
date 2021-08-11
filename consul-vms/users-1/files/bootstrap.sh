@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Fetch the CA that can be used to securely access the local agent API endpoints
+# Auto encypt uses the Consul Connect CA not the CA used to secure the Consul Servers TLS
 curl -s --cacert /certs/consul-agent-ca.pem https://server.container.shipyard.run:8501/v1/connect/ca/roots?pem=true > /certs/local-agent-ca.pem
 
 # Set the Consul token and encryption key
@@ -14,9 +15,15 @@ export CONSUL_CACERT="/certs/local-agent-ca.pem"
 mkdir -p /etc/consul.d
 mkdir -p /opt/consul
 
+# Add the consul agent config
+sudo ln -s /files/config.hcl /etc/consul.d/config.hcl
+
+# Add the Consul service registration config for the users service
+#sudo ln -s /files/users-service.hcl /etc/consul.d/users-service.hcl
+
 cat <<EOF > /etc/systemd/system/consul.service
 [Unit]
-Description="HashiCorp Consul - A service mesh solution"
+Description="HashiCorp Consul"
 Documentation=https://www.consul.io/
 Requires=network-online.target
 After=network-online.target
@@ -28,6 +35,10 @@ KillMode=process
 KillSignal=SIGTERM
 Restart=on-failure
 LimitNOFILE=65536
+Environment="CONSUL_HTTP_TOKEN=${CONSUL_HTTP_TOKEN}"
+Environment="CONSUL_CACERT=${CONSUL_CACERT}"
+Environment="CONSUL_HTTP_ADDR=${CONSUL_HTTP_ADDR}"
+Environment="CONSUL_GRPC_ADDR=${CONSUL_GRPC_ADDR}"
 
 [Install]
 WantedBy=multi-user.target
@@ -48,12 +59,34 @@ acl {
 encrypt = "${GOSSIP_KEY}"
 EOF
 
+# Register and deregister the users service
+cat <<EOF > /etc/systemd/system/consul-users.service
+[Unit]
+Description="Register users service with Consul"
+After=consul.service
+Requires=consul.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+Restart=on-failure
+ExecStart=/usr/bin/consul services register /files/users-service.hcl
+ExecStop=/usr/bin/consul services deregister /files/users-service.hcl
+Environment="CONSUL_HTTP_TOKEN=${CONSUL_HTTP_TOKEN}"
+Environment="CONSUL_CACERT=${CONSUL_CACERT}"
+Environment="CONSUL_HTTP_ADDR=${CONSUL_HTTP_ADDR}"
+Environment="CONSUL_GRPC_ADDR=${CONSUL_GRPC_ADDR}"
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 # Setup Envoy proxy in SystemD
 cat <<EOF > /etc/systemd/system/envoy.service
 [Unit]
 Description=Envoy
 After=network-online.target
-Wants=consul.service
+Requires=consul.service
 
 [Service]
 ExecStart=/usr/bin/consul connect envoy -sidecar-for users-1 -envoy-binary /usr/bin/envoy -- -l debug
@@ -89,27 +122,17 @@ WantedBy=multi-user.target
 EOF
 
 
-# Add the consul agent config
-sudo ln -s /files/config.hcl /etc/consul.d/config.hcl
-
 # Restart SystemD
 systemctl daemon-reload
 
 systemctl enable consul
 systemctl start consul
 
+systemctl enable consul-users
+systemctl start consul-users
+
 systemctl enable envoy
 systemctl start envoy
 #
 systemctl enable users
 systemctl start users
-
-# Wait for the agent to come up then register the service
-until curl -s -k https://localhost:8501/v1/status/leader | grep 8300; do
-  echo "Waiting for Consul to start"
-  sleep 1
-done
-
-# Add the Consul service registration config for the users service
-#sudo ln -s /files/users-service.hcl /etc/consul.d/users-service.hcl
-consul services register /files/users-service.hcl

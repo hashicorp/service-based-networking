@@ -3,7 +3,7 @@ title: Consul Service Mesh with VMs
 author: Nic Jackson
 slug: consul_vms
 browser_windows: https://server.container.shipyard.run:8501
-shipyard_version: ">= 0.3.25"
+#shipyard_version: ">= 0.3.25"
 ---
 
 This blueprint create a simple Consul server and agent setup in simulated Ubuntu virtual machines.
