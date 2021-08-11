@@ -1,3 +1,3 @@
 variable "consul_version" {
-  default = "1.9.5"
+  default = "1.10.1"
 }

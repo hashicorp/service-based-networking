@@ -8,7 +8,7 @@ export CONSUL_HTTP_TOKEN="$(cat /tokens/users.token)"
 export GOSSIP_KEY="$(cat /tokens/gossip.key)"
 export CONSUL_HTTP_ADDR="https://localhost:8501"
 export CONSUL_GRPC_ADDR="https://localhost:8502"
-export CONSUL_CACERT="/certs/consul/ca.pem"
+export CONSUL_CACERT="/certs/local-agent-ca.pem"
 
 # Setup the systemd unit for consul
 mkdir -p /etc/consul.d
@@ -91,7 +91,6 @@ EOF
 
 # Add the consul agent config
 sudo ln -s /files/config.hcl /etc/consul.d/config.hcl
-sudo ln -s /files/users-service.hcl /etc/consul.d/users-service.hcl
 
 # Restart SystemD
 systemctl daemon-reload
@@ -99,11 +98,11 @@ systemctl daemon-reload
 systemctl enable consul
 systemctl start consul
 
-#systemctl enable envoy
-#systemctl start envoy
+systemctl enable envoy
+systemctl start envoy
 #
-#systemctl enable users
-#systemctl start users
+systemctl enable users
+systemctl start users
 
 # Wait for the agent to come up then register the service
 until curl -s -k https://localhost:8501/v1/status/leader | grep 8300; do
@@ -112,4 +111,5 @@ until curl -s -k https://localhost:8501/v1/status/leader | grep 8300; do
 done
 
 # Add the Consul service registration config for the users service
-#consul services register /files/users-service.hcl
+#sudo ln -s /files/users-service.hcl /etc/consul.d/users-service.hcl
+consul services register /files/users-service.hcl
