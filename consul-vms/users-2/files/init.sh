@@ -1,26 +1,27 @@
 #!/bin/bash
 
-# Fetch the CA that can be used to securely access the local agent API endpoints
-# Auto encypt uses the Consul Connect CA not the CA used to secure the Consul Servers TLS
-curl -s --cacert /certs/consul-agent-ca.pem https://server.container.shipyard.run:8501/v1/connect/ca/roots?pem=true > /certs/local-agent-ca.pem
+echo "Provisioning server ${SERVERNAME}"
 
-# Set the Consul token and encryption key
-export CONSUL_HTTP_TOKEN="$(cat /tokens/users.token)"
-export GOSSIP_KEY="$(cat /tokens/gossip.key)"
-export CONSUL_HTTP_ADDR="https://localhost:8501"
-export CONSUL_GRPC_ADDR="https://localhost:8502"
-export CONSUL_CACERT="/certs/local-agent-ca.pem"
-
-# Setup the systemd unit for consul
 mkdir -p /etc/consul.d
 mkdir -p /opt/consul
+mkdir -p /local-ca
+
+# Fetch the CA that can be used to securely access the local agent API endpoints
+# Auto encypt uses the Consul Connect CA not the CA used to secure the Consul Servers TLS
+curl -s --cacert /certs/ca/consul-agent-ca.pem https://server.container.shipyard.run:8501/v1/connect/ca/roots?pem=true > /local-ca/local-agent-ca.pem
+
+# Set the Consul token and encryption key
+export CONSUL_HTTP_TOKEN="$(cat /tokens/${SERVERNAME}/${SERVERNAME}.token)"
+export GOSSIP_KEY="$(cat /tokens/gossip/gossip.key)"
+export CONSUL_HTTP_ADDR="https://localhost:8501"
+export CONSUL_GRPC_ADDR="https://localhost:8502"
+export CONSUL_CACERT="/local-ca/local-agent-ca.pem"
+
 
 # Add the consul agent config
 sudo ln -s /files/config.hcl /etc/consul.d/config.hcl
 
-# Add the Consul service registration config for the users service
-#sudo ln -s /files/users-service.hcl /etc/consul.d/users-service.hcl
-
+# Setup the systemd unit for consul
 cat <<EOF > /etc/systemd/system/consul.service
 [Unit]
 Description="HashiCorp Consul"
@@ -89,7 +90,7 @@ After=network-online.target
 Requires=consul.service
 
 [Service]
-ExecStart=/usr/bin/consul connect envoy -sidecar-for users-1 -envoy-binary /usr/bin/envoy -- -l debug
+ExecStart=/usr/bin/consul connect envoy -sidecar-for ${SERVERNAME} -envoy-binary /usr/bin/envoy -- -l debug
 Environment="CONSUL_HTTP_TOKEN=${CONSUL_HTTP_TOKEN}"
 Environment="CONSUL_CACERT=${CONSUL_CACERT}"
 Environment="CONSUL_HTTP_ADDR=${CONSUL_HTTP_ADDR}"
@@ -111,8 +112,8 @@ After=network-online.target
 [Service]
 ExecStart=/usr/bin/fake-service
 Environment="LISTEN_ADDR=0.0.0.0:9090"
-Environment="NAME=Users"
-Environment="MESSAGE=Hello from the Users service"
+Environment="NAME=users"
+Environment="MESSAGE=Hello from the ${SERVERNAME} service"
 Restart=always
 RestartSec=5
 StartLimitIntervalSec=0

@@ -20,9 +20,9 @@ verify_incoming_rpc = true
 verify_outgoing = true
 verify_server_hostname = true
 
-key_file = "/certs/dc1-server-consul-0-key.pem"
-cert_file = "/certs/dc1-server-consul-0.pem"
-ca_file = "/certs/consul-agent-ca.pem"
+key_file = "/certs/server/dc1-server-consul-0-key.pem"
+cert_file = "/certs/server/dc1-server-consul-0.pem"
+ca_file = "/certs/ca/consul-agent-ca.pem"
 
 connect {
   enabled = true

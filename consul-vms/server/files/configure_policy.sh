@@ -1,4 +1,5 @@
 #!/bin/bash -e
+
 until curl -s -k https://localhost:8501/v1/status/leader | grep 8300; do
   echo "Waiting for Consul to start"
   sleep 1

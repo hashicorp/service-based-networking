@@ -1,7 +1,7 @@
 //
 // Consul client node.
 //
-container "users-1" {
+container "users-2" {
   network {
     name = "network.dc1"
   }
@@ -18,8 +18,8 @@ container "users-1" {
   }
   
   volume {
-    source      = "${data("shared")}/tokens/users-1"
-    destination = "/tokens/users-1"
+    source      = "${data("shared")}/tokens/users-2"
+    destination = "/tokens/users-2"
   }
   
   volume {
@@ -44,7 +44,7 @@ container "users-1" {
 
   env {
     key = "CONSUL_HTTP_TOKEN_FILE"
-    value = "/tokens/users-1/users-1.token"
+    value = "/tokens/users-2/users-2.token"
   }
 
   env {
@@ -55,7 +55,7 @@ container "users-1" {
   # Name of the server for the init scripts 
   env {
     key = "SERVERNAME"
-    value = "users-1"
+    value = "users-2"
   }
 
   # Tmp volumes required by SystemD
@@ -84,31 +84,31 @@ container "users-1" {
   }
 }
 
-exec_local "create_token_folder_users_1" {
+exec_local "create_token_folder_users_2" {
   cmd = "mkdir"
   args = [
     "-p",
-    "${data("shared")}/tokens/users-1"
+    "${data("shared")}/tokens/users-2"
   ]
 }
 
-exec_remote "generate_token_for_users_1" {
+exec_remote "generate_token_for_users_2" {
   target = "container.server"
   depends_on = ["exec_remote.configure_acl_policy"]
 
   cmd = "/bin/bash"
   args = [
     "-c",
-    "consul acl token create -policy-name=users --format=json | jq -r .SecretID > /tokens/users-1/users-1.token"
+    "consul acl token create -policy-name=users --format=json | jq -r .SecretID > /tokens/users-2/users-2.token"
   ]
 }
 
 //
 // Install Consul.
 //
-exec_remote "install_consul_users_1" {
-  target = "container.users-1"
-  depends_on = ["exec_remote.generate_token_for_users_1"]
+exec_remote "install_consul_users_2" {
+  target = "container.users-2"
+  depends_on = ["exec_remote.generate_token_for_users_2"]
 
   cmd = "bash"
   args = [

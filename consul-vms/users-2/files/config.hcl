@@ -1,4 +1,4 @@
-node_name = "users-1"
+node_name = "users-2"
 data_dir = "/opt/consul"
 server = false
 

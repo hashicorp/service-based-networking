@@ -1,76 +1,36 @@
 //
-// Create Gossip encryption key.
-//
-exec_remote "create_gossip_key" {
-  image {
-    name = "consul:1.10.1"
-  }
-  
-  working_directory = "/tokens"
-
-  cmd = "sh"
-  args = [
-    "-c",
-    "consul keygen > /tokens/gossip.key"
-  ]
-  
-  volume {
-    source = "${data("shared")}/tokens"
-    destination = "/tokens"
-  }
-}
-
-//
-// Create CA certificate.
-//
-exec_remote "create_ca" {
-  image {
-    name = "consul:1.10.1"
-  }
-  
-  working_directory = "/certs"
-
-  cmd = "consul"
-  args = [
-    "tls",
-    "ca",
-    "create"
-  ]
-  
-  volume {
-    source = "${data("shared")}/certs"
-    destination = "/certs"
-  }
-}
-
-//
 // Create certificates for server
 //
-exec_remote "create_certs" {
-  depends_on = ["exec_remote.create_ca","exec_remote.create_gossip_key"]
-
+exec_remote "bootstrap_server_security" {
   image {
     name = "consul:1.10.1"
   }
   
-  working_directory = "/certs"
+  working_directory = "/files"
 
-  cmd = "consul"
+  cmd = "/bin/sh"
   args = [
-    "tls",
-    "cert",
-    "create",
-    "-server",
-    "-dc", "dc1",
-    "-node", "consul",
-    "-ca", "/certs/consul-agent-ca.pem",
-    "-key", "/certs/consul-agent-ca-key.pem",
-    "-additional-dnsname","server.container.shipyard.run",
+    "-c", "./bootstrap_server_security.sh"
   ]
   
   volume {
-    source = "${data("shared")}/certs"
-    destination = "/certs"
+    source = "${data("shared")}/certs/ca"
+    destination = "/certs/ca"
+  }
+  
+  volume {
+    source = "${data("shared")}/certs/server"
+    destination = "/certs/server"
+  }
+  
+  volume {
+    source = "${data("shared")}/tokens/gossip"
+    destination = "/tokens/gossip"
+  }
+  
+  volume {
+    source      = "./files"
+    destination = "/files"
   }
 }
 
@@ -78,7 +38,7 @@ exec_remote "create_certs" {
 // Consul server node.
 //
 container "server" {
-  depends_on = ["exec_remote.create_certs"]
+  depends_on = ["exec_remote.bootstrap_server_security"]
 
   network {
     name = "network.dc1"
@@ -122,8 +82,13 @@ container "server" {
   }
 
   volume {
-    source      = "${data("shared")}/certs"
-    destination = "/certs"
+    source      = "${data("shared")}/certs/ca"
+    destination = "/certs/ca"
+  }
+  
+  volume {
+    source      = "${data("shared")}/certs/server"
+    destination = "/certs/server"
   }
   
   volume {
@@ -148,17 +113,17 @@ container "server" {
 
   env {
     key = "CONSUL_CACERT"
-    value = "/certs/consul-agent-ca.pem"
+    value = "/certs/ca/consul-agent-ca.pem"
   }
 
   env {
     key = "CONSUL_CLIENT_CERT"
-    value = "/certs/dc1-server-consul-0.pem"
+    value = "/certs/server/dc1-server-consul-0.pem"
   }
    
   env {
     key = "CONSUL_CLIENT_KEY"
-    value = "/certs/dc1-server-consul-0-key.pem"
+    value = "/certs/server/dc1-server-consul-0-key.pem"
   }
 }
 
@@ -171,7 +136,7 @@ exec_remote "install_consul" {
   cmd = "bash"
   args = [
     "-c",
-    "/files/bootstrap.sh",
+    "/files/init.sh",
   ]
 }
 

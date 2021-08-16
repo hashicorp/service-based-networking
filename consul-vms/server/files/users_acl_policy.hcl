@@ -1,8 +1,8 @@
-node "users-1" {
+node_prefix "users-" {
   policy = "write"
 }
 
-agent "users-1" {
+agent_agent "users-" {
   policy = "write"
 }
 
