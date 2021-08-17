@@ -8,9 +8,6 @@ bootstrap_expect = 1
 log_level = "DEBUG"
 
 ui = true
-#ui_config {
-#  enabled = true
-#}
 
 auto_encrypt {
   allow_tls = true

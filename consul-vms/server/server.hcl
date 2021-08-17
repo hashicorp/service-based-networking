@@ -61,7 +61,7 @@ container "server" {
     type = "tmpfs"
     source      = ""
     destination = "/sys/fs/cgroup"
- }
+  }
  
   volume {
     source      = ""

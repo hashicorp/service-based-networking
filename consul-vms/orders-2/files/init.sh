@@ -2,12 +2,9 @@
 
 echo "Provisioning server ${SERVERNAME}"
 
-mkdir -p /etc/consul.d
-mkdir -p /opt/consul
-mkdir -p /local-ca
-
 # Fetch the CA that can be used to securely access the local agent API endpoints
 # Auto encypt uses the Consul Connect CA not the CA used to secure the Consul Servers TLS
+mkdir -p /local-ca
 curl -s --cacert /certs/ca/consul-agent-ca.pem https://server.container.shipyard.run:8501/v1/connect/ca/roots?pem=true > /local-ca/local-agent-ca.pem
 
 # Set the Consul token and encryption key
@@ -17,11 +14,16 @@ export CONSUL_HTTP_ADDR="https://localhost:8501"
 export CONSUL_GRPC_ADDR="https://localhost:8502"
 export CONSUL_CACERT="/local-ca/local-agent-ca.pem"
 
+# Setup the systemd unit for consul
+mkdir -p /etc/consul.d
+mkdir -p /opt/consul
 
 # Add the consul agent config
 sudo ln -s /files/config.hcl /etc/consul.d/config.hcl
 
-# Setup the systemd unit for consul
+# Add the Consul service registration config for the users service
+#sudo ln -s /files/users-service.hcl /etc/consul.d/users-service.hcl
+
 cat <<EOF > /etc/systemd/system/consul.service
 [Unit]
 Description="HashiCorp Consul"
@@ -60,10 +62,10 @@ acl {
 encrypt = "${GOSSIP_KEY}"
 EOF
 
-# Register and deregister the users service
-cat <<EOF > /etc/systemd/system/consul-users.service
+# Register and deregister the orders service
+cat <<EOF > /etc/systemd/system/consul-orders.service
 [Unit]
-Description="Register users service with Consul"
+Description="Register orders service with Consul"
 After=consul.service
 Requires=consul.service
 
@@ -71,8 +73,8 @@ Requires=consul.service
 Type=oneshot
 RemainAfterExit=yes
 Restart=on-failure
-ExecStart=/usr/bin/consul services register /files/users-service.hcl
-ExecStop=/usr/bin/consul services deregister /files/users-service.hcl
+ExecStart=/usr/bin/consul services register /files/orders-service.hcl
+ExecStop=/usr/bin/consul services deregister /files/orders-service.hcl
 Environment="CONSUL_HTTP_TOKEN=${CONSUL_HTTP_TOKEN}"
 Environment="CONSUL_CACERT=${CONSUL_CACERT}"
 Environment="CONSUL_HTTP_ADDR=${CONSUL_HTTP_ADDR}"
@@ -104,16 +106,17 @@ WantedBy=multi-user.target
 EOF
 
 # Setup the Users service in SystemD
-cat <<EOF > /etc/systemd/system/users.service
+cat <<EOF > /etc/systemd/system/orders.service
 [Unit]
-Description=Users Service
+Description=Orders Service
 After=network-online.target
 
 [Service]
 ExecStart=/usr/bin/fake-service
-Environment="LISTEN_ADDR=0.0.0.0:9091"
-Environment="NAME=users"
+Environment="LISTEN_ADDR=0.0.0.0:9090"
+Environment="NAME=orders"
 Environment="MESSAGE=Hello from the ${SERVERNAME} service"
+Environment="UPSTREAM_URIS=http://localhost:9190"
 Restart=always
 RestartSec=5
 StartLimitIntervalSec=0
@@ -129,11 +132,11 @@ systemctl daemon-reload
 systemctl enable consul
 systemctl start consul
 
-systemctl enable consul-users
-systemctl start consul-users
+systemctl enable consul-orders
+systemctl start consul-orders
 
 systemctl enable envoy
 systemctl start envoy
 #
-systemctl enable users
-systemctl start users
+systemctl enable orders
+systemctl start orders

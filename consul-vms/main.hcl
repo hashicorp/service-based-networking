@@ -11,13 +11,13 @@ output "CONSUL_HTTP_TOKEN" {
 }
 
 output "CONSUL_CACERT" {
-  value = "${data("shared")}/certs/consul-agent-ca.pem"
+  value = "${data("shared")}/certs/ca/consul-agent-ca.pem"
 }
 
 output "CONSUL_CLIENT_CERT" {
-  value = "${data("shared")}/certs/dc1-server-consul-0.pem"
+  value = "${data("shared")}/certs/server/dc1-server-consul-0.pem"
 }
  
 output "CONSUL_CLIENT_KEY"{
-  value = "${data("shared")}/certs/dc1-server-consul-0-key.pem"
+  value = "${data("shared")}/certs/server/dc1-server-consul-0-key.pem"
 }
