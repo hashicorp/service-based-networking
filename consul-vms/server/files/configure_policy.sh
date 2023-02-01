@@ -1,4 +1,7 @@
 #!/bin/bash -e
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 
 until curl -s -k https://localhost:8501/v1/status/leader | grep 8300; do
   echo "Waiting for Consul to start"
