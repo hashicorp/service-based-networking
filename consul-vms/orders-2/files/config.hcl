@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 node_name = "orders-2"
 data_dir = "/opt/consul"
 server = false

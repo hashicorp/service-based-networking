@@ -1,4 +1,7 @@
 #!/bin/sh -e
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 
 # Bootstrap the gossip encryption key
 consul keygen > /tokens/gossip/gossip.key
